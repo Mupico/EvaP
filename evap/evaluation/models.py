@@ -294,7 +294,7 @@ class Course(models.Model, metaclass=LocalizeModelBase):
     vote_end_date = models.DateField(verbose_name=_("last day of evaluation"))
 
     # who last modified this course
-    last_modified_time = models.DateTimeField(auto_now=True)
+    last_modified_time = models.DateTimeField()
     last_modified_user = models.ForeignKey(settings.AUTH_USER_MODEL, models.SET_NULL, null=True, blank=True, related_name="course_last_modified_user+")
 
     course_evaluated = Signal(providing_args=['request', 'semester'])
@@ -311,7 +311,10 @@ class Course(models.Model, metaclass=LocalizeModelBase):
     def __str__(self):
         return self.name
 
-    def save(self, *args, **kw):
+    def save(self, update_last_modified_time=True, *args, **kw):
+        if update_last_modified_time:
+            last_modified_time = datetime.now()
+        
         first_save = self.pk is None
         super().save(*args, **kw)
 
@@ -588,8 +591,7 @@ class Course(models.Model, metaclass=LocalizeModelBase):
             try:
                 if course.state == "approved" and course.vote_start_datetime <= datetime.now():
                     course.evaluation_begin()
-                    course.last_modified_user = UserProfile.objects.cronjob_user()
-                    course.save()
+                    course.save(update_last_modified_time=false)
                     courses_new_in_evaluation.append(course)
                 elif course.state == "in_evaluation" and datetime.now() >= course.vote_end_datetime:
                     course.evaluation_end()

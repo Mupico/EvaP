@@ -263,7 +263,7 @@ def helper_semester_course_operation_start(request, courses, template):
     for course in courses:
         course.vote_start_datetime = datetime.now()
         course.evaluation_begin()
-        course.save()
+        course.save(update_last_modified_time=False)
     messages.success(request, ungettext("Successfully started evaluation for %(courses)d course.",
         "Successfully started evaluation for %(courses)d courses.", len(courses)) % {'courses': len(courses)})
     if template:
