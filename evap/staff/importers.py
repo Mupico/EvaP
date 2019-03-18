@@ -508,29 +508,33 @@ class PersonImporter:
         self.warnings = defaultdict(list)
         self.errors = []
 
-    def process_participants(self, evaluation, test_run, user_list):
+    def process_participants(self, evaluation, test_run, user_list, replace_all = False):
         evaluation_participants = evaluation.participants.all()
         already_related = [user for user in user_list if user in evaluation_participants]
         users_to_add = [user for user in user_list if user not in evaluation_participants]
 
-        if already_related:
+        if already_related and not replace_all:
             msg = _("The following {} users are already participants in evaluation {}:").format(len(already_related), evaluation.name)
             msg += create_user_list_string_for_message(already_related)
             self.warnings[ExcelImporter.W_GENERAL].append(mark_safe(msg))
 
         if not test_run:
-            evaluation.participants.add(*users_to_add)
-            msg = _("{} participants added to the evaluation {}:").format(len(users_to_add), evaluation.name)
+            if replace_all:
+                evaluation.participants = user_list
+                msg = _("{} participants chosen for the evaluation {}:").format(len(user_list), evaluation.name)
+            else:
+                evaluation.participants.add(*users_to_add)
+                msg = _("{} participants added to the evaluation {}:").format(len(users_to_add), evaluation.name)
         else:
             msg = _("{} participants would be added to the evaluation {}:").format(len(users_to_add), evaluation.name)
         msg += create_user_list_string_for_message(users_to_add)
 
         self.success_messages.append(mark_safe(msg))
 
-    def process_contributors(self, evaluation, test_run, user_list):
+    def process_contributors(self, evaluation, test_run, user_list, replace_all = False):
         already_related_contributions = Contribution.objects.filter(evaluation=evaluation, contributor__in=user_list).all()
         already_related = [contribution.contributor for contribution in already_related_contributions]
-        if already_related:
+        if already_related and not replace_all:
             msg = _("The following {} users are already contributing to evaluation {}:").format(len(already_related), evaluation.name)
             msg += create_user_list_string_for_message(already_related)
             self.warnings[ExcelImporter.W_GENERAL].append(mark_safe(msg))
