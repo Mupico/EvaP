@@ -544,10 +544,17 @@ class PersonImporter:
         users_to_add = [user for user in user_list if user not in already_related]
 
         if not test_run:
-            for user in users_to_add:
-                order = Contribution.objects.filter(evaluation=evaluation).count()
-                Contribution.objects.create(evaluation=evaluation, contributor=user, order=order)
-            msg = _("{} contributors added to the evaluation {}:").format(len(users_to_add), evaluation.name)
+            if replace_all:
+                Contribution.object.filter(evaluation=evaluation).delete()
+                for user in user_list:
+                    order = Contribution.objects.filter(evaluation=evaluation).count()
+                    Contribution.objects.create(evaluation=evaluation, contributor=user, order=order)
+                msg = _("{} contributors chosen for the evaluation {}:").format(len(users_to_add), evaluation.name)
+            else:
+                for user in users_to_add:
+                    order = Contribution.objects.filter(evaluation=evaluation).count()
+                    Contribution.objects.create(evaluation=evaluation, contributor=user, order=order)
+                msg = _("{} contributors added to the evaluation {}:").format(len(users_to_add), evaluation.name)
         else:
             msg = _("{} contributors would be added to the evaluation {}:").format(len(users_to_add), evaluation.name)
         msg += create_user_list_string_for_message(users_to_add)
