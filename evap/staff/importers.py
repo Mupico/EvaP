@@ -509,6 +509,7 @@ class PersonImporter:
         self.errors = []
 
     def process_participants(self, evaluation, test_run, user_list, replace_all = False):
+        print("\n\n in process participants \n\n")
         evaluation_participants = evaluation.participants.all()
         already_related = [user for user in user_list if user in evaluation_participants]
         users_to_add = [user for user in user_list if user not in evaluation_participants]
@@ -562,28 +563,28 @@ class PersonImporter:
         self.success_messages.append(mark_safe(msg))
 
     @classmethod
-    def process_file_content(cls, import_type, evaluation, test_run, file_content):
+    def process_file_content(cls, import_type, evaluation, test_run, file_content, replace_all=False):
         importer = cls()
 
         # the user import also makes these users active
         user_list, importer.success_messages, importer.warnings, importer.errors = UserImporter.process(file_content, test_run)
         if import_type == 'participant':
-            importer.process_participants(evaluation, test_run, user_list)
+            importer.process_participants(evaluation, test_run, user_list, replace_all)
         else:  # import_type == 'contributor'
-            importer.process_contributors(evaluation, test_run, user_list)
+            importer.process_contributors(evaluation, test_run, user_list, replace_all)
 
         return importer.success_messages, importer.warnings, importer.errors
 
     @classmethod
-    def process_source_evaluation(cls, import_type, evaluation, test_run, source_evaluation):
+    def process_source_evaluation(cls, import_type, evaluation, test_run, source_evaluation, replace_all=False):
         importer = cls()
 
         if import_type == 'participant':
             user_list = list(source_evaluation.participants.all())
-            importer.process_participants(evaluation, test_run, user_list)
+            importer.process_participants(evaluation, test_run, user_list, replace_all)
         else:  # import_type == 'contributor'
             user_list = list(UserProfile.objects.filter(contributions__evaluation=source_evaluation))
-            importer.process_contributors(evaluation, test_run, user_list)
+            importer.process_contributors(evaluation, test_run, user_list, replace_all)
 
         cls.make_users_active(user_list)
 

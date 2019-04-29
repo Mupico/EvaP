@@ -867,8 +867,13 @@ def evaluation_person_management(request, semester_id, evaluation_id):
                     save_import_file(excel_file, request.user.id, import_type)
 
         elif 'import' in operation:
+            replace_current = False
+            if 'participants' in operation:
+                replace_current = bool(request.POST.get('replace-current-participants'))
+            else: # contributors in operation
+                replace_current = bool(request.POST.get('replace-current-contributors'))
             file_content = get_import_file_content_or_raise(request.user.id, import_type)
-            success_messages, warnings, __ = PersonImporter.process_file_content(import_type, evaluation, test_run=False, file_content=file_content)
+            success_messages, warnings, __ = PersonImporter.process_file_content(import_type, evaluation, test_run=False, file_content=file_content, replace_all=replace_current)
             delete_import_file(request.user.id, import_type)
             forward_messages(request, success_messages, warnings)
             return redirect('staff:semester_view', semester_id)
@@ -876,8 +881,12 @@ def evaluation_person_management(request, semester_id, evaluation_id):
         elif 'copy' in operation:
             copy_form.evaluation_selection_required = True
             if copy_form.is_valid():
+                if 'participants' in operation:
+                    replace_current = bool(request.POST.get('replace-current-participants'))
+                else: # contributors in operation
+                    replace_current = bool(request.POST.get('replace-current-contributors'))
                 import_evaluation = copy_form.cleaned_data['evaluation']
-                success_messages, warnings, errors = PersonImporter.process_source_evaluation(import_type, evaluation, test_run=False, source_evaluation=import_evaluation)
+                success_messages, warnings, errors = PersonImporter.process_source_evaluation(import_type, evaluation, test_run=False, source_evaluation=import_evaluation, replace_all=replace_current)
                 forward_messages(request, success_messages, warnings)
                 return redirect('staff:semester_view', semester_id)
 
