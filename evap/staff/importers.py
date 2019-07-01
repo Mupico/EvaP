@@ -509,7 +509,6 @@ class PersonImporter:
         self.errors = []
 
     def process_participants(self, evaluation, test_run, user_list, replace_all = False):
-        print("\n\n in process participants \n\n")
         evaluation_participants = evaluation.participants.all()
         already_related = [user for user in user_list if user in evaluation_participants]
         users_to_add = [user for user in user_list if user not in evaluation_participants]
@@ -521,14 +520,17 @@ class PersonImporter:
 
         if not test_run:
             if replace_all:
-                evaluation.participants = user_list
+                evaluation.participants.set(user_list)
                 msg = _("{} participants chosen for the evaluation {}:").format(len(user_list), evaluation.name)
             else:
                 evaluation.participants.add(*users_to_add)
                 msg = _("{} participants added to the evaluation {}:").format(len(users_to_add), evaluation.name)
         else:
             msg = _("{} participants would be added to the evaluation {}:").format(len(users_to_add), evaluation.name)
-        msg += create_user_list_string_for_message(users_to_add)
+        if replace_all:
+            msg += create_user_list_string_for_message(user_list)
+        else:
+            msg += create_user_list_string_for_message(users_to_add)
 
         self.success_messages.append(mark_safe(msg))
 
@@ -558,7 +560,10 @@ class PersonImporter:
                 msg = _("{} contributors added to the evaluation {}:").format(len(users_to_add), evaluation.name)
         else:
             msg = _("{} contributors would be added to the evaluation {}:").format(len(users_to_add), evaluation.name)
-        msg += create_user_list_string_for_message(users_to_add)
+        if replace_all:
+            msg += create_user_list_string_for_message(user_list)
+        else:
+            msg += create_user_list_string_for_message(users_to_add)
 
         self.success_messages.append(mark_safe(msg))
 
