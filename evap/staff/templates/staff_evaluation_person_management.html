@@ -17,7 +17,7 @@
                         <h6 class="card-subtitle mb-2 text-muted">{% trans 'From Excel file' %}</h6>
                         <p class="card-text">{% trans 'Upload Excel file with participant data' %} (<a href="{% url 'staff:download_sample_xls' 'sample_user.xls' %}">{% trans 'sample file' %}</a>). {% trans 'This will create all containing users.' %}</p>
                         {% include 'bootstrap_form.html' with form=participant_excel_form wide=True %}
-                        <label><input type="checkbox" value="1" name="replace-current-participants"> replace current participants</label>
+                        <label><input type="checkbox" value="1" name="replace-current-participants-import"{% if replace_current_participants_import_checked %} checked{% endif %}> replace current participants</label>
                     </div>
                     <div class="card-footer text-center">
                         {% if not participant_test_passed %}
@@ -40,7 +40,7 @@
                     <h6 class="card-subtitle mb-2 text-muted">{% trans 'From other evaluation' %}</h6>
                         <p class="card-text">{% trans 'Copy participants from another evaluation.' %}</p>
                         {% include 'bootstrap_form.html' with form=participant_copy_form wide=True %}
-                        <label><input type="checkbox" value="1" name="replace-current-participants"> replace current participants</label>
+                        <label><input type="checkbox" value="1" name="replace-current-participants-copy"{% if replace_current_participants_copy_checked %} checked{% endif %}> replace current participants</label>
                     </div>
                     <div class="card-footer text-center">
                         <button name="operation" value="copy-participants" type="submit" class="btn btn-sm btn-primary form-submit-btn">{% trans 'Copy participants' %}</button>
@@ -60,7 +60,7 @@
                         <h6 class="card-subtitle mb-2 text-muted">{% trans 'From Excel file' %}</h6>
                         <p class="card-text">{% trans 'Upload Excel file with contributor data' %} (<a href="{% url 'staff:download_sample_xls' 'sample_user.xls' %}">{% trans 'sample file' %}</a>). {% trans 'This will create all containing users.' %}</p>
                         {% include 'bootstrap_form.html' with form=contributor_excel_form wide=True %}
-                        <label><input type="checkbox" value="1" name="replace-current-contributors"> replace current contributors</label>
+                        <label><input type="checkbox" value="1" name="replace-current-contributors-import"{% if replace_current_contributors_import_checked %} checked{% endif %}> replace current contributors</label>
                     </div>
                     <div class="card-footer text-center">
                         {% if not contributor_test_passed %}
@@ -83,7 +83,7 @@
                     <h6 class="card-subtitle mb-2 text-muted">{% trans 'From other evaluation' %}</h6>
                         <p class="card-text">{% trans 'Copy contributors from another evaluation.' %}</p>
                         {% include 'bootstrap_form.html' with form=contributor_copy_form wide=True %}
-                        <label><input type="checkbox" value="1" name="replace-current-contributors"> replace current contributors</label>
+                        <label><input type="checkbox" value="1" name="replace-current-contributors-copy"{% if replace_current_contributors_copy_checked %} checked{% endif %}> replace current contributors</label>
                     </div>
                     <div class="card-footer text-center">
                         <button name="operation" value="copy-contributors" type="submit" class="btn btn-sm btn-primary form-submit-btn">{% trans 'Copy contributors' %}</button>

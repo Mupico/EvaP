@@ -846,6 +846,11 @@ def evaluation_person_management(request, semester_id, evaluation_id):
     warnings = defaultdict(list)
     success_messages = []
 
+    replace_current_participants_import_checked = False
+    replace_current_participants_copy_checked = False
+    replace_current_contributors_import_checked = False
+    replace_current_contributors_copy_checked = False
+
     if request.method == "POST":
         operation = request.POST.get('operation')
         if operation not in ('test-participants', 'import-participants', 'copy-participants',
@@ -859,6 +864,10 @@ def evaluation_person_management(request, semester_id, evaluation_id):
         if 'test' in operation:
             delete_import_file(request.user.id, import_type)  # remove old files if still exist
             excel_form.excel_file_required = True
+            replace_current_participants_import_checked = bool(request.POST.get('replace-current-participants-import'))
+            replace_current_contributors_import_checked = bool(request.POST.get('replace-current-contributors-copy'))
+            replace_current_participants_copy_checked = bool(request.POST.get('replace-current-participants-import'))
+            replace_current_contributors_copy_checked = bool(request.POST.get('replace-current-contributors-copy'))
             if excel_form.is_valid():
                 excel_file = excel_form.cleaned_data['excel_file']
                 file_content = excel_file.read()
@@ -867,11 +876,10 @@ def evaluation_person_management(request, semester_id, evaluation_id):
                     save_import_file(excel_file, request.user.id, import_type)
 
         elif 'import' in operation:
-            replace_current = False
-            if 'participants' in operation:
-                replace_current = bool(request.POST.get('replace-current-participants'))
-            else: # contributors in operation
-                replace_current = bool(request.POST.get('replace-current-contributors'))
+            replace_current_participants_import_checked = bool(request.POST.get('replace-current-participants-import'))
+            replace_current_contributors_import_checked = bool(request.POST.get('replace-current-contributors-import'))
+            replace_current = replace_current_participants_import_checked if import_type == 'participants' else replace_current_contributors_import_checked
+
             file_content = get_import_file_content_or_raise(request.user.id, import_type)
             success_messages, warnings, __ = PersonImporter.process_file_content(import_type, evaluation, test_run=False, file_content=file_content, replace_all=replace_current)
             delete_import_file(request.user.id, import_type)
@@ -881,10 +889,10 @@ def evaluation_person_management(request, semester_id, evaluation_id):
         elif 'copy' in operation:
             copy_form.evaluation_selection_required = True
             if copy_form.is_valid():
-                if 'participants' in operation:
-                    replace_current = bool(request.POST.get('replace-current-participants'))
-                else: # contributors in operation
-                    replace_current = bool(request.POST.get('replace-current-contributors'))
+                replace_current_participants_copy_checked = bool(request.POST.get('replace-current-participants-copy'))
+                replace_current_contributors_copy_checked = bool(request.POST.get('replace-current-contributors-copy'))
+                replace_current = replace_current_participants_copy_checked if import_type == 'participants' else replace_current_contributors_copy_checked
+
                 import_evaluation = copy_form.cleaned_data['evaluation']
                 success_messages, warnings, errors = PersonImporter.process_source_evaluation(import_type, evaluation, test_run=False, source_evaluation=import_evaluation, replace_all=replace_current)
                 forward_messages(request, success_messages, warnings)
@@ -895,7 +903,11 @@ def evaluation_person_management(request, semester_id, evaluation_id):
     # casting warnings to a normal dict is necessary for the template to iterate over it.
     return render(request, "staff_evaluation_person_management.html", dict(semester=semester, evaluation=evaluation,
         participant_excel_form=participant_excel_form, participant_copy_form=participant_copy_form,
-        contributor_excel_form=contributor_excel_form, contributor_copy_form=contributor_copy_form,
+        contributor_excel_form=contributor_excel_form, contributor_copy_form=contributor_copy_form, 
+        replace_current_participants_import_checked=replace_current_participants_import_checked,
+        replace_current_participants_copy_checked=replace_current_participants_copy_checked,
+        replace_current_contributors_import_checked=replace_current_contributors_import_checked,
+        replace_current_contributors_copy_checked=replace_current_contributors_copy_checked,
         success_messages=success_messages, warnings=dict(warnings), errors=errors,
         participant_test_passed=participant_test_passed, contributor_test_passed=contributor_test_passed))
 
